@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Studi Kasus GIS: Manajemen Aset Publik Kota</title>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:wght@600;800&family=Public+Sans:wght@400;600&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#f5f4ef;--fg:#1d2a24;--mut:#5b675f;--card:#fff;--line:#d8d6cb;--acc:#1f6f4a;--ok:#2e9e5b;--bad:#d33a2c;--fix:#e0a000;--map:#e9eee3;--water:#b9d8ea;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#121a16;--fg:#e8efe9;--mut:#9fb0a5;--card:#1a2620;--line:#2e3d34;--acc:#6fd09b;--map:#1f2c25;--water:#1f4358}}
+:root[data-theme="dark"]{--bg:#121a16;--fg:#e8efe9;--mut:#9fb0a5;--card:#1a2620;--line:#2e3d34;--acc:#6fd09b;--map:#1f2c25;--water:#1f4358}
+*{box-sizing:border-box}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{margin:0;background:var(--bg);color:var(--fg);font:16px/1.65 "Public Sans",system-ui,sans-serif}
+main{max-width:900px;margin:0 auto;padding:24px 18px 56px}
+h1,h2{font-family:Fraunces,Georgia,serif;line-height:1.15;margin:0 0 .5em}
+h1{font-size:clamp(2rem,6vw,3rem);font-weight:800}
+h2{font-size:1.5rem;margin-top:2.2em}
+.lead{color:var(--mut);font-size:1.08rem;max-width:62ch}
+p{max-width:68ch}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:12px;margin:14px 0}
+.grid div{background:var(--card);border-left:3px solid var(--acc);padding:8px 14px}
+.grid b{display:block}.grid span{color:var(--mut);font-size:.92rem}
+.lab{background:var(--card);border:1px solid var(--line);border-radius:8px;padding:16px;margin-top:14px}
+.split{display:grid;grid-template-columns:2fr 1fr;gap:14px}
+@media(max-width:700px){.split{grid-template-columns:1fr}}
+svg{width:100%;height:auto;display:block;border-radius:6px;background:var(--map)}
+.asset{cursor:pointer}.asset:focus-visible{outline:none}.asset:focus-visible *{stroke:var(--fg);stroke-width:3}
+label{display:block;font-weight:600;font-size:.92rem;margin-bottom:8px}
+label output{float:right;color:var(--acc)}
+select,input[type=range],textarea{width:100%;font:inherit;color:var(--fg);background:var(--bg);border:1px solid var(--line);border-radius:6px;padding:6px}
+input[type=range]{padding:0;accent-color:var(--acc)}
+textarea{font-family:ui-monospace,Menlo,monospace;font-size:.85rem;min-height:120px}
+button{font:inherit;font-weight:600;border:0;border-radius:6px;padding:7px 12px;background:var(--acc);color:var(--bg);cursor:pointer;margin:0 6px 6px 0}
+button.bad{background:var(--bad);color:#fff}button.fix{background:var(--fix);color:#222}button.ok{background:var(--ok);color:#fff}
+button:focus-visible,select:focus-visible,input:focus-visible,textarea:focus-visible{outline:3px solid var(--fix);outline-offset:2px}
+.stat{display:flex;gap:18px;flex-wrap:wrap;margin:8px 0 12px}
+.stat b{display:block;font-size:1.3rem;font-family:Fraunces,serif}.stat span{color:var(--mut);font-size:.85rem}
+.legend{display:flex;gap:14px;flex-wrap:wrap;font-size:.85rem;color:var(--mut);margin-top:8px}
+.dot{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:4px}
+#info{font-size:.95rem}#info h3{margin:0 0 4px;font-family:Fraunces,serif}
+dl{margin:6px 0;display:grid;grid-template-columns:auto 1fr;gap:2px 10px}dt{color:var(--mut)}dd{margin:0}
+pre{background:var(--bg);border:1px solid var(--line);padding:10px;border-radius:6px;overflow-x:auto;font-size:.82rem;margin:8px 0 0}
+.tw{overflow-x:auto}table{border-collapse:collapse;width:100%;min-width:480px}
+th,td{text-align:left;padding:8px 10px;border-bottom:1px solid var(--line);font-size:.95rem;vertical-align:top}
+</style>
+</head>
+<body>
+<main>
+<h1>Manajemen aset publik kota dengan GIS</h1>
+<p class="lead">Studi kasus dari materi “Career and Competition Industrial Era with Geographic Information System (GIS)” oleh Widi Primadepa. GIS bukan sekadar peta digital, melainkan sistem berbasis komputer untuk menangkap, menyimpan, memanipulasi, menganalisis, mengelola, dan menyajikan data spasial.</p>
+
+<section>
+<h2>Latar belakang</h2>
+<p>Sebuah pemerintah kota mengelola puluhan ribu aset fisik: taman, jaringan air, dan fasilitas umum. Data aset tersebar di spreadsheet, tanpa lokasi yang jelas, sehingga jadwal perawatan sering terlewat dan biaya sulit diperkirakan. Dinas ingin satu sistem yang menghubungkan setiap lokasi aset dengan atributnya (jadwal perawatan dan perkiraan biaya), bisa diperbarui teknisi di lapangan, dan mampu mendukung keputusan.</p>
+<div class="grid">
+<div><b>Manajemen aset publik</b><span>Tiap aset di peta terhubung ke atribut jadwal dan biaya.</span></div>
+<div><b>Pengambilan keputusan</b><span>Analisis catchment area: penduduk, lalu lintas, jarak, dan pesaing.</span></div>
+<div><b>Pekerjaan lapangan</b><span>Teknisi memperbarui status aset dan peta langsung ikut berubah.</span></div>
+</div>
+</section>
+
+<section>
+<h2>Demo 1: peta aset dan pembaruan lapangan</h2>
+<p>Klik sebuah aset, lalu jalankan peran teknisi lapangan dengan mengubah statusnya. Ringkasan biaya di bawah ikut berubah secara langsung.</p>
+<div class="lab">
+<label for="flt">Filter jenis aset
+<select id="flt"><option value="all">Semua</option><option value="taman">Taman</option><option value="air">Jaringan air</option><option value="fasum">Fasilitas umum</option></select></label>
+<div class="split">
+<div>
+<svg id="m1" viewBox="0 0 600 380" role="group" aria-label="Peta aset kota"></svg>
+<div class="legend"><span><i class="dot" style="background:var(--ok)"></i>Baik</span><span><i class="dot" style="background:var(--bad)"></i>Rusak</span><span><i class="dot" style="background:var(--fix)"></i>Diperbaiki</span><span>Lingkaran: taman</span><span>Kotak: jaringan air</span><span>Segitiga: fasilitas umum</span></div>
+</div>
+<div id="info" aria-live="polite"></div>
+</div>
+<div class="stat">
+<div><b id="c1">0</b><span>aset rusak</span></div>
+<div><b id="c2">0</b><span>sedang diperbaiki</span></div>
+<div><b id="c3">Rp 0</b><span>biaya perawatan aset rusak</span></div>
+</div>
+</div>
+</section>
+
+<section>
+<h2>Demo 2: analisis catchment area untuk keputusan komersial</h2>
+<p>Klik peta untuk menaruh calon lokasi toko. Sistem menghitung penduduk dalam radius dan jumlah pesaing. Satu titik abu-abu mewakili 25 penduduk, dan 1 satuan peta setara 10 meter.</p>
+<div class="lab">
+<label for="rad">Radius layanan <output id="orad"></output></label>
+<input id="rad" type="range" min="30" max="200" value="90">
+<svg id="m2" viewBox="0 0 600 380" aria-label="Peta analisis catchment area"></svg>
+<div class="stat">
+<div><b id="p1">-</b><span>penduduk dalam radius</span></div>
+<div><b id="p2">-</b><span>pesaing dalam radius</span></div>
+<div><b id="p3">-</b><span>skor potensi</span></div>
+</div>
+<p id="rec" style="margin:0;color:var(--mut)">Klik peta untuk memilih lokasi.</p>
+</div>
+</section>
+
+<section>
+<h2>Demo 3: otomasi data dengan pipeline ETL (konsep FME)</h2>
+<p>Data aset dari berbagai dinas formatnya berantakan. Pipeline ETL (Extract, Transform, Load) membersihkannya secara berulang: memisahkan kolom, merapikan nama, mengubah biaya menjadi angka, dan menyeragamkan tanggal.</p>
+<div class="lab">
+<label for="raw">Data mentah (nama | biaya | tanggal perawatan)</label>
+<textarea id="raw">taman kota merdeka | Rp 1.500.000 | 01/03/2025
+JARINGAN AIR blok c ; 2.750.000 ; 2025-04-15
+  lampu jalan  utama | Rp850000 | 20/05/2025
+pos ronda timur | gratis | 31/02/2025</textarea>
+<p><button id="etl">Jalankan ETL</button></p>
+<div id="etlmsg" style="color:var(--mut)"></div>
+<pre id="out">Hasil JSON akan tampil di sini.</pre>
+</div>
+</section>
+
+<section>
+<h2>Arsitektur perangkat lunak dan workflow GIS</h2>
+<div class="tw"><table>
+<tr><th>Lapisan</th><th>Open source</th><th>Proprietary / enterprise</th></tr>
+<tr><td>Desktop dan analisis</td><td>QGIS</td><td>ArcGIS Pro</td></tr>
+<tr><td>Basis data spasial</td><td>PostGIS (PostgreSQL)</td><td>ArcGIS Enterprise (geodatabase)</td></tr>
+<tr><td>Server dan web GIS</td><td>GeoServer</td><td>ArcGIS Online, ArcGIS Enterprise</td></tr>
+<tr><td>Otomasi dan integrasi</td><td colspan="2">FME (Feature Manipulation Engine): ETL spasial untuk konversi format, pembersihan data berulang, dan integrasi GIS dengan sistem ERP/CRM.</td></tr>
+</table></div>
+
+<h2>Sinergi IT dan GIS</h2>
+<p>Dunia GIS bergeser ke spatial software engineering, cloud GIS, dan automated pipeline. Keunggulan lulusan teknik informatika: Python untuk otomasi dan scripting, JavaScript untuk web GIS (seperti demo di halaman ini), dan pemahaman database relasional berfitur spasial.</p>
+<p>Wawasan tambahan untuk kesiapan industri: membangun portofolio proyek, memanfaatkan AI sebagai penunjang kerja, dan kemampuan berkomunikasi.</p>
+<h2>Kesimpulan</h2>
+<p>GIS mengubah data aset dan lokasi menjadi keputusan: dari perawatan yang tepat waktu, pemilihan lokasi usaha, sampai pembaruan data real-time di lapangan. Bagi mahasiswa informatika, kombinasi pemrograman, basis data, dan GIS membuka jalur karier yang kompetitif di era industri digital.</p>
+</section>
+</main>
+
+<script>
+const $=id=>document.getElementById(id);
+const NS='http://www.w3.org/2000/svg';
+const rp=n=>'Rp '+n.toLocaleString('id-ID');
+function rng(s){return()=>{s|=0;s=s+0x6D2B79F5|0;let t=Math.imul(s^s>>>15,1|s);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296}}
+function base(svg){
+  return '<path d="M-10 250 C120 210 200 290 330 250 S520 190 610 220 L610 262 C520 235 440 300 330 288 S130 250 -10 290Z" fill="var(--water)"/>'+
+  '<g stroke="var(--line)" stroke-width="5" fill="none"><path d="M0 120H600M0 330H600M150 0V380M420 0V380"/></g>';
+}
+
+// ---------- Demo 1 ----------
+const assets=[
+ {id:'TMN-01',n:'Taman Kota Merdeka',j:'taman',x:110,y:80,jad:'Tiap 2 minggu',b:1500000,s:'baik'},
+ {id:'TMN-02',n:'Taman Bantaran Sungai',j:'taman',x:300,y:215,jad:'Tiap bulan',b:900000,s:'baik'},
+ {id:'TMN-03',n:'Taman Bermain Timur',j:'taman',x:500,y:90,jad:'Tiap 2 minggu',b:1200000,s:'baik'},
+ {id:'AIR-01',n:'Pipa Utama Blok C',j:'air',x:200,y:170,jad:'Tiap 6 bulan',b:2750000,s:'baik'},
+ {id:'AIR-02',n:'Stasiun Pompa Barat',j:'air',x:70,y:300,jad:'Tiap 3 bulan',b:4200000,s:'baik'},
+ {id:'AIR-03',n:'Bak Penampung Utara',j:'air',x:370,y:50,jad:'Tiap 6 bulan',b:3100000,s:'baik'},
+ {id:'FSM-01',n:'Halte Pusat Kota',j:'fasum',x:150,y:340,jad:'Tiap 3 bulan',b:650000,s:'baik'},
+ {id:'FSM-02',n:'Lampu Jalan Utama',j:'fasum',x:420,y:150,jad:'Tiap bulan',b:850000,s:'baik'},
+ {id:'FSM-03',n:'Toilet Umum Pasar',j:'fasum',x:520,y:320,jad:'Tiap 2 minggu',b:500000,s:'baik'},
+ {id:'FSM-04',n:'Jembatan Penyeberangan',j:'fasum',x:270,y:325,jad:'Tiap 6 bulan',b:5200000,s:'baik'}
+];
+const col={baik:'var(--ok)',rusak:'var(--bad)',perbaikan:'var(--fix)'};
+const sname={baik:'Baik',rusak:'Rusak',perbaikan:'Sedang diperbaiki'};
+let sel=null;
+function shape(a){
+  const f=col[a.s],c=a.id===(sel&&sel.id)?'var(--fg)':'#fff';
+  if(a.j==='taman')return `<circle cx="${a.x}" cy="${a.y}" r="11" fill="${f}" stroke="${c}" stroke-width="2.5"/>`;
+  if(a.j==='air')return `<rect x="${a.x-10}" y="${a.y-10}" width="20" height="20" fill="${f}" stroke="${c}" stroke-width="2.5"/>`;
+  return `<polygon points="${a.x},${a.y-12} ${a.x+12},${a.y+9} ${a.x-12},${a.y+9}" fill="${f}" stroke="${c}" stroke-width="2.5"/>`;
+}
+function render1(){
+  const f=$('flt').value;
+  $('m1').innerHTML=base()+assets.filter(a=>f==='all'||a.j===f).map(a=>
+   `<g class="asset" tabindex="0" role="button" aria-label="${a.n}, ${sname[a.s]}" data-id="${a.id}">${shape(a)}</g>`).join('');
+  $('m1').querySelectorAll('.asset').forEach(g=>{
+    const pick=()=>{sel=assets.find(a=>a.id===g.dataset.id);render1();info()};
+    g.onclick=pick;g.onkeydown=e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();pick()}};
+  });
+  const r=assets.filter(a=>a.s==='rusak'),p=assets.filter(a=>a.s==='perbaikan');
+  $('c1').textContent=r.length;$('c2').textContent=p.length;
+  $('c3').textContent=rp(r.reduce((t,a)=>t+a.b,0));
+}
+function info(){
+  const el=$('info');
+  if(!sel){el.innerHTML='<p style="color:var(--mut)">Klik sebuah aset di peta untuk melihat atributnya.</p>';return}
+  el.innerHTML=`<h3>${sel.n}</h3><dl><dt>ID</dt><dd>${sel.id}</dd><dt>Jadwal</dt><dd>${sel.jad}</dd><dt>Biaya</dt><dd>${rp(sel.b)}</dd><dt>Status</dt><dd><b style="color:${col[sel.s]}">${sname[sel.s]}</b></dd></dl>
+  <p style="margin:6px 0;color:var(--mut);font-size:.85rem">Peran teknisi lapangan:</p>
+  <button class="bad" data-s="rusak">Laporkan rusak</button><button class="fix" data-s="perbaikan">Mulai perbaikan</button><button class="ok" data-s="baik">Selesai</button>`;
+  el.querySelectorAll('button').forEach(b=>b.onclick=()=>{sel.s=b.dataset.s;render1();info()});
+}
+$('flt').onchange=render1;
+render1();info();
+
+// ---------- Demo 2 ----------
+const rnd=rng(7),pts=[];
+[[130,100,60],[430,110,50],[300,300,70],[520,300,40]].forEach(([cx,cy,s])=>{
+  for(let i=0;i<90;i++){
+    const a=rnd()*6.283,d=Math.sqrt(-2*Math.log(rnd()+1e-6))*s*.55;
+    const x=cx+Math.cos(a)*d,y=cy+Math.sin(a)*d;
+    if(x>5&&x<595&&y>5&&y<375)pts.push([x,y]);
+  }
+});
+const rivals=[[210,150],[400,230],[320,330],[90,250],[510,120]];
+let pos=null;
+function render2(){
+  const r=+$('rad').value;$('orad').textContent=(r*10)+' m';
+  let h=base()+pts.map(p=>`<circle cx="${p[0].toFixed(1)}" cy="${p[1].toFixed(1)}" r="2.6" fill="var(--mut)" opacity=".55"/>`).join('')+
+   rivals.map(p=>`<g><rect x="${p[0]-7}" y="${p[1]-7}" width="14" height="14" fill="var(--bad)" stroke="#fff" stroke-width="2"/></g>`).join('');
+  if(pos){
+    h+=`<circle cx="${pos[0]}" cy="${pos[1]}" r="${r}" fill="var(--acc)" fill-opacity=".18" stroke="var(--acc)" stroke-width="2" stroke-dasharray="6 4"/>
+        <circle cx="${pos[0]}" cy="${pos[1]}" r="8" fill="var(--acc)" stroke="#fff" stroke-width="2.5"/>`;
+    const inR=q=>Math.hypot(q[0]-pos[0],q[1]-pos[1])<=r;
+    const pop=pts.filter(inR).length*25,riv=rivals.filter(inR).length,skor=Math.round(pop/(1+riv));
+    $('p1').textContent=pop.toLocaleString('id-ID');$('p2').textContent=riv;$('p3').textContent=skor.toLocaleString('id-ID');
+    $('rec').textContent=skor>1500?'Potensi tinggi: pasar besar dengan persaingan rendah.':skor>700?'Potensi sedang: pertimbangkan diferensiasi layanan.':'Potensi rendah: coba geser lokasi atau perluas radius.';
+  }
+  $('m2').innerHTML=h+'<text x="8" y="372" font-size="11" fill="var(--mut)">Abu-abu: penduduk · Merah: pesaing</text>';
+}
+$('m2').addEventListener('click',e=>{
+  const b=$('m2').getBoundingClientRect();
+  pos=[Math.round((e.clientX-b.left)*600/b.width),Math.round((e.clientY-b.top)*380/b.height)];render2();
+});
+$('rad').oninput=render2;render2();
+
+// ---------- Demo 3 ----------
+const cap=s=>s.toLowerCase().replace(/\s+/g,' ').trim().replace(/(^|\s)\S/g,m=>m.toUpperCase());
+$('etl').onclick=()=>{
+  const rows=$('raw').value.split('\n').filter(l=>l.trim()),ok=[],bad=[];
+  rows.forEach((l,i)=>{
+    const [n,c,t]=l.split(/\s*[|;\t]\s*/);
+    const biaya=parseInt((c||'').replace(/\D/g,''),10);
+    let d=null,m;
+    if(m=(t||'').match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/))d=[m[3],m[2],m[1]];
+    else if(m=(t||'').match(/^(\d{4})-(\d{2})-(\d{2})$/))d=[m[1],m[2],m[3]];
+    let iso=null;
+    if(d){const dt=new Date(Date.UTC(+d[0],+d[1]-1,+d[2]));
+      if(dt.getUTCDate()===+d[2]&&dt.getUTCMonth()===+d[1]-1)iso=dt.toISOString().slice(0,10)}
+    if(n&&!isNaN(biaya)&&iso)ok.push({nama:cap(n),biaya,perawatan_terakhir:iso});
+    else bad.push('Baris '+(i+1)+': '+(!n?'nama kosong':isNaN(biaya)?'biaya tidak valid':'tanggal tidak valid'));
+  });
+  $('etlmsg').textContent=ok.length+' baris valid, '+bad.length+' ditolak'+(bad.length?' ('+bad.join('; ')+')':'')+'.';
+  $('out').textContent=JSON.stringify(ok,null,2);
+};
+</script>
+</body>
+</html>
